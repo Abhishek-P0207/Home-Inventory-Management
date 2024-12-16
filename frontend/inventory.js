@@ -1,6 +1,6 @@
 // const url = new URL(location.href);
 
-const APILINK = "http://localhost:8000/api/";
+const APILINK = "https://home-inventory-management-backend.vercel.app/";
 
 // function fetchRooms(){
 //     fetch(APILINK + "room/-1",{
