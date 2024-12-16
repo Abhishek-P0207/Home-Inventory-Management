@@ -1,0 +1,4 @@
+node_modules
+.env
+items.html
+items.js
