@@ -1,0 +1,95 @@
+.App {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background-color: #2c3e50;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #34495e;
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: #2c3e50;
+  border: 1px solid #2c3e50;
+}
+
+.btn-secondary:hover {
+  background-color: #2c3e50;
+  color: white;
+}
+
+.loading-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+}
+
+.loading-content {
+  text-align: center;
+}
+
+.loading-content .logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.loading-content .logo-icon {
+  width: 48px;
+  height: 48px;
+  background-color: #2c3e50;
+  color: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.loading-content .logo-text {
+  font-size: 24px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.loading-content p {
+  color: #6c757d;
+  font-size: 16px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}

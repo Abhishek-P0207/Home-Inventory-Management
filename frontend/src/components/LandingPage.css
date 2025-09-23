@@ -1,0 +1,172 @@
+.landing-page {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.landing-header {
+  background-color: white;
+  border-bottom: 1px solid #e9ecef;
+  padding: 0;
+}
+
+.landing-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  height: 70px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon {
+  width: 40px;
+  height: 40px;
+  background-color: #2c3e50;
+  color: white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.logo-text {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.nav-links {
+  display: flex;
+  gap: 32px;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: #6c757d;
+  font-weight: 500;
+  font-size: 14px;
+  transition: color 0.2s ease;
+}
+
+.nav-links a:hover {
+  color: #2c3e50;
+}
+
+.nav-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.landing-main {
+  padding: 80px 0 120px;
+}
+
+.hero-section {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.hero-content {
+  padding-left: 20px;
+}
+
+.hero-title {
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #2c3e50;
+  margin-bottom: 24px;
+}
+
+.hero-description {
+  font-size: 18px;
+  line-height: 1.6;
+  color: #6c757d;
+  margin-bottom: 40px;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.btn-large {
+  padding: 16px 32px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.hero-note {
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background-color: #2c3e50;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #34495e;
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: #2c3e50;
+  border: 1px solid #2c3e50;
+}
+
+.btn-secondary:hover {
+  background-color: #2c3e50;
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .landing-nav {
+    flex-direction: column;
+    gap: 20px;
+    height: auto;
+    padding: 20px 0;
+  }
+
+  .nav-links {
+    gap: 20px;
+  }
+
+  .hero-title {
+    font-size: 36px;
+  }
+
+  .hero-buttons {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
