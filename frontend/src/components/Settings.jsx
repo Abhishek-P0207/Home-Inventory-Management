@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
 import { User, Bell, Shield, Database, Download, Trash2, Save } from 'lucide-react';
+import AuthService from '../services/auth.js';
 import './Settings.css';
 
 const Settings = ({ user }) => {
   const [activeTab, setActiveTab] = useState('profile');
   const [profileData, setProfileData] = useState({
-    name: user?.name || 'John Doe',
-    email: user?.email || 'john@example.com',
-    company: 'Acme Corp',
-    phone: '+1 (555) 123-4567'
+    name: user?.name || '',
+    email: user?.email || '',
+    company: '',
+    phone: ''
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [notifications, setNotifications] = useState({
     lowStock: true,
     newItems: false,
@@ -21,12 +25,36 @@ const Settings = ({ user }) => {
     sessionTimeout: '30',
     passwordExpiry: '90'
   });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
 
-  const handleProfileUpdate = (e) => {
+  const handleProfileUpdate = async (e) => {
     e.preventDefault();
-    // Simulate API call
-    console.log('Profile updated:', profileData);
-    alert('Profile updated successfully!');
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const token = localStorage.getItem('token');
+      const updatedUser = await AuthService.updateProfile(token, {
+        name: profileData.name,
+        email: profileData.email
+      });
+      
+      // Update local storage with new user data
+      const currentUser = JSON.parse(localStorage.getItem('user'));
+      const newUserData = { ...currentUser, ...updatedUser };
+      localStorage.setItem('user', JSON.stringify(newUserData));
+      
+      setSuccess('Profile updated successfully!');
+    } catch (error) {
+      setError(error.message || 'Failed to update profile');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleNotificationUpdate = () => {
@@ -35,10 +63,42 @@ const Settings = ({ user }) => {
     alert('Notification preferences updated!');
   };
 
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setError('New passwords do not match');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await AuthService.changePassword(
+        token,
+        passwordData.currentPassword,
+        passwordData.newPassword
+      );
+      
+      setSuccess('Password changed successfully!');
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    } catch (error) {
+      setError(error.message || 'Failed to change password');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSecurityUpdate = () => {
-    // Simulate API call
-    console.log('Security settings updated:', security);
-    alert('Security settings updated!');
+    // For now, just update local state (2FA and other settings would need backend implementation)
+    setSuccess('Security preferences updated!');
   };
 
   const exportData = () => {
@@ -106,6 +166,8 @@ const Settings = ({ user }) => {
                 <div className="section-header">
                   <h2>Profile Information</h2>
                   <p>Update your personal information and contact details</p>
+                  {error && <div className="error-message">{error}</div>}
+                  {success && <div className="success-message">{success}</div>}
                 </div>
 
                 <form onSubmit={handleProfileUpdate} className="settings-form">
@@ -151,9 +213,9 @@ const Settings = ({ user }) => {
                     </div>
                   </div>
 
-                  <button type="submit" className="btn btn-primary">
+                  <button type="submit" className="btn btn-primary" disabled={loading}>
                     <Save size={16} />
-                    Save Changes
+                    {loading ? 'Saving...' : 'Save Changes'}
                   </button>
                 </form>
               </div>
@@ -240,7 +302,49 @@ const Settings = ({ user }) => {
                 <div className="section-header">
                   <h2>Security Settings</h2>
                   <p>Manage your account security and authentication</p>
+                  {error && <div className="error-message">{error}</div>}
+                  {success && <div className="success-message">{success}</div>}
                 </div>
+
+                <form onSubmit={handlePasswordChange} className="settings-form">
+                  <h3>Change Password</h3>
+                  <div className="form-group">
+                    <label className="form-label">Current Password</label>
+                    <input
+                      type="password"
+                      className="form-input"
+                      value={passwordData.currentPassword}
+                      onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">New Password</label>
+                    <input
+                      type="password"
+                      className="form-input"
+                      value={passwordData.newPassword}
+                      onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                      required
+                      minLength="6"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Confirm New Password</label>
+                    <input
+                      type="password"
+                      className="form-input"
+                      value={passwordData.confirmPassword}
+                      onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                      required
+                      minLength="6"
+                    />
+                  </div>
+                  <button type="submit" className="btn btn-primary" disabled={loading}>
+                    <Save size={16} />
+                    {loading ? 'Changing...' : 'Change Password'}
+                  </button>
+                </form>
 
                 <div className="security-settings">
                   <div className="security-item">

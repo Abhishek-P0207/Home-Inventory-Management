@@ -4,17 +4,31 @@
   "description": "A modern inventory management system with React frontend and Node.js backend",
   "main": "backend/index.js",
   "scripts": {
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "dev": "node start-dev.js",
+    "dev-concurrent": "concurrently \"npm run server\" \"npm run client\"",
     "server": "cd backend && npm start",
     "client": "cd frontend && npm run dev",
     "build": "cd frontend && npm run build",
     "install-all": "cd backend && npm install && cd ../frontend && npm install",
-    "start": "cd backend && npm start"
+    "start": "cd backend && nodemon start",
+    "check-setup": "node check-setup.js",
+    "test-auth": "node test-auth.js",
+    "test-inventory": "node test-inventory.js",
+    "debug-frontend": "node debug-frontend.js"
   },
-  "keywords": ["inventory", "management", "react", "nodejs", "mongodb"],
+  "keywords": [
+    "inventory",
+    "management",
+    "react",
+    "nodejs",
+    "mongodb"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "nodemon": "^3.1.10"
   }
 }

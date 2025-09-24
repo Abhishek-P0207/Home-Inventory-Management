@@ -11,16 +11,28 @@ class ApiService {
     return response.json();
   }
 
+  // Helper method to get auth headers
+  getAuthHeaders() {
+    const token = localStorage.getItem('token');
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+  }
+
   // Helper method to make API calls with error handling
   async makeRequest(url, options = {}) {
     try {
-      const response = await fetch(`${API_BASE_URL}${url}`, {
+      const authHeaders = this.getAuthHeaders();
+
+      const requestConfig = {
         headers: {
           'Content-Type': 'application/json',
+          ...authHeaders,
           ...options.headers,
         },
         ...options,
-      });
+      };
+
+      const response = await fetch(`${API_BASE_URL}${url}`, requestConfig);
+
       return await this.handleResponse(response);
     } catch (error) {
       console.error(`API Error for ${url}:`, error);
@@ -30,7 +42,8 @@ class ApiService {
 
   // Get all inventory items
   async getAllItems() {
-    return this.makeRequest('/room/all');
+    const result = await this.makeRequest('/all');
+    return result;
   }
 
   // Get items by category/room
@@ -45,15 +58,19 @@ class ApiService {
 
   // Add new inventory item
   async addItem(itemData) {
-    return this.makeRequest('/new', {
+    const payload = {
+      name: itemData.name,
+      roomName: itemData.category || itemData.roomName,
+      quantity: parseInt(itemData.quantity),
+      description: itemData.description
+    };
+
+    const result = await this.makeRequest('/new', {
       method: 'POST',
-      body: JSON.stringify({
-        name: itemData.name,
-        roomName: itemData.category || itemData.roomName,
-        quantity: parseInt(itemData.quantity),
-        description: itemData.description // Note: backend doesn't store description yet
-      }),
+      body: JSON.stringify(payload),
     });
+
+    return result;
   }
 
   // Update inventory item
@@ -89,12 +106,14 @@ class ApiService {
   async getAnalyticsData() {
     try {
       const items = await this.getAllItems();
-      
+      console.log(items);
       // Calculate analytics
       const totalItems = items.length;
       const categories = [...new Set(items.map(item => item.roomName))];
       const lowStockItems = items.filter(item => item.quantity <= 5);
-      
+      console.log(categories);
+      console.log(lowStockItems)
+
       // Calculate category distribution
       const categoryStats = categories.map(category => {
         const categoryItems = items.filter(item => item.roomName === category);
@@ -105,16 +124,6 @@ class ApiService {
           percentage: Math.round((categoryItems.length / totalItems) * 100)
         };
       });
-
-      // Generate dummy trend data (in real app, this would come from historical data)
-      const lowStockTrend = [
-        { month: 'Jan', count: Math.floor(Math.random() * 10) + 1 },
-        { month: 'Feb', count: Math.floor(Math.random() * 10) + 1 },
-        { month: 'Mar', count: Math.floor(Math.random() * 10) + 1 },
-        { month: 'Apr', count: Math.floor(Math.random() * 10) + 1 },
-        { month: 'May', count: Math.floor(Math.random() * 10) + 1 },
-        { month: 'Jun', count: lowStockItems.length }
-      ];
 
       return {
         totalItems,
@@ -145,6 +154,7 @@ class ApiService {
       const categories = [...new Set(items.map(item => item.roomName))];
       const lowStockItems = items.filter(item => item.quantity <= 5);
       
+
       return {
         totalItems: items.length,
         lowStock: lowStockItems.length,
@@ -166,7 +176,7 @@ class ApiService {
         name: item.name,
         category: item.roomName,
         quantity: item.quantity,
-        addedDate: new Date().toISOString().split('T')[0] // Backend doesn't store dates yet
+        addedDate: new Date().toISOString().split('T')[0]
       }));
     } catch (error) {
       console.error('Error fetching recent items:', error);

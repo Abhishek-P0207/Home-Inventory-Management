@@ -56,8 +56,8 @@ const AuthPage = ({ onLogin }) => {
       <header className="auth-header">
         <div className="container">
           <Link to="/" className="logo">
-            <div className="logo-icon">IM</div>
-            <span className="logo-text">Inventory Manager</span>
+            <div className="logo-icon">I</div>
+            <span className="logo-text">Easy Inventory</span>
           </Link>
         </div>
       </header>
@@ -157,13 +157,6 @@ const AuthPage = ({ onLogin }) => {
                   {isLogin ? 'Sign up' : 'Sign in'}
                 </button>
               </p>
-              {isLogin && (
-                <div className="demo-credentials">
-                  <p><strong>Demo credentials:</strong></p>
-                  <p>Email: john@example.com</p>
-                  <p>Password: password123</p>
-                </div>
-              )}
             </div>
           </div>
         </div>

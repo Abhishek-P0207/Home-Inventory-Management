@@ -32,15 +32,19 @@ const Inventory = () => {
   const fetchItems = async () => {
     setLoading(true);
     setError(null);
+    console.log('🔄 Fetching items...');
+    
     try {
       const data = await ApiService.getAllItems();
+      
       const formattedItems = data.map(item => ({
-        id: item._id || Math.random().toString(36).substr(2, 9),
+        id: item._id || Math.random().toString(36).substring(2, 9),
         name: item.name,
         category: item.roomName,
         quantity: item.quantity,
         description: item.description || 'No description available'
       }));
+      
       setItems(formattedItems);
       
       // Extract unique categories
@@ -50,21 +54,9 @@ const Inventory = () => {
       console.error('Error fetching items:', error);
       setError('Failed to load inventory items. Please try again.');
       
-      // Fallback to dummy data for demo purposes
-      const dummyItems = [
-        { id: 1, name: 'Laptop Dell XPS', category: 'Electronics', quantity: 5, description: 'High-performance laptop for office work' },
-        { id: 2, name: 'Office Chair', category: 'Furniture', quantity: 12, description: 'Ergonomic office chair with lumbar support' },
-        { id: 3, name: 'Printer Paper', category: 'Office Supplies', quantity: 50, description: 'A4 size white printer paper' },
-        { id: 4, name: 'Wireless Mouse', category: 'Electronics', quantity: 8, description: 'Bluetooth wireless mouse' },
-        { id: 5, name: 'Desk Lamp', category: 'Furniture', quantity: 15, description: 'LED desk lamp with adjustable brightness' },
-        { id: 6, name: 'Ink Cartridge', category: 'Office Supplies', quantity: 2, description: 'Black ink cartridge for HP printer' },
-        { id: 7, name: 'USB Cable', category: 'Electronics', quantity: 3, description: 'USB-C to USB-A cable' },
-        { id: 8, name: 'Notebook', category: 'Office Supplies', quantity: 1, description: 'Spiral-bound notebook' }
-      ];
-      setItems(dummyItems);
-      
-      const uniqueCategories = [...new Set(dummyItems.map(item => item.category))];
-      setCategories(uniqueCategories);
+      // Don't use fallback dummy data - let's see the real issue
+      setItems([]);
+      setCategories([]);
     } finally {
       setLoading(false);
     }
@@ -92,8 +84,9 @@ const Inventory = () => {
     setLoading(true);
     setError(null);
     
+    
     try {
-      await ApiService.addItem({
+      const result = await ApiService.addItem({
         name: newItem.name,
         category: newItem.category,
         quantity: newItem.quantity,
@@ -108,23 +101,6 @@ const Inventory = () => {
     } catch (error) {
       console.error('Error adding item:', error);
       setError('Failed to add item. Please try again.');
-      
-      // Fallback: add to local state for demo
-      const item = {
-        id: Date.now(),
-        name: newItem.name,
-        category: newItem.category,
-        quantity: parseInt(newItem.quantity),
-        description: newItem.description
-      };
-      setItems([...items, item]);
-      
-      if (!categories.includes(newItem.category)) {
-        setCategories([...categories, newItem.category]);
-      }
-      
-      setNewItem({ name: '', category: '', quantity: '', description: '' });
-      setShowAddModal(false);
     } finally {
       setLoading(false);
     }
@@ -305,11 +281,17 @@ const Inventory = () => {
           ))}
         </div>
 
-        {filteredItems.length === 0 && (
+        {filteredItems.length === 0 && !loading && (
           <div className="empty-state">
             <Package size={64} />
             <h3>No items found</h3>
             <p>Try adjusting your search or add a new item to get started.</p>
+            <div style={{ marginTop: '20px', fontSize: '12px', color: '#666' }}>
+              <p>Debug info:</p>
+              <p>Items count: {items.length}</p>
+              <p>Filtered items count: {filteredItems.length}</p>
+              <p>Categories: {categories.join(', ') || 'None'}</p>
+            </div>
           </div>
         )}
 

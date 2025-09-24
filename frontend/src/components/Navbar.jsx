@@ -14,8 +14,8 @@ const Navbar = ({ user, onLogout }) => {
       <div className="container">
         <div className="navbar-content">
           <Link to="/dashboard" className="logo">
-            <div className="logo-icon">IM</div>
-            <span className="logo-text">Inventory Manager</span>
+            <div className="logo-icon">I</div>
+            <span className="logo-text">Easy Inventory</span>
           </Link>
 
           <div className="nav-links">

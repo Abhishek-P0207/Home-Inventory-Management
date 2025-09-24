@@ -69,8 +69,8 @@ function App() {
         <div className="loading-screen">
           <div className="loading-content">
             <div className="logo">
-              <div className="logo-icon">IM</div>
-              <span className="logo-text">Inventory Manager</span>
+              <div className="logo-icon">I</div>
+              <span className="logo-text">Easy Inventory</span>
             </div>
             <p>Loading...</p>
           </div>

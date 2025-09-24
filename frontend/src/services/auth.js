@@ -1,54 +1,54 @@
-// Simple authentication service (mock implementation)
-// In a real application, this would connect to a proper authentication backend
+// Authentication service for backend communication
+const API_BASE_URL = '/api/auth';
 
 class AuthService {
-  // Mock user database (in real app, this would be in the backend)
-  static users = [
-    {
-      id: 1,
-      name: 'John Doe',
-      email: 'john@example.com',
-      password: 'password123' // In real app, this would be hashed
-    },
-    {
-      id: 2,
-      name: 'Jane Smith',
-      email: 'jane@example.com',
-      password: 'password123'
-    }
-  ];
+  // Helper method to handle API responses
+  async handleResponse(response) {
+    const data = await response.json();
 
-  // Simulate API delay
-  static delay(ms = 1000) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    if (!response.ok) {
+      throw new Error(data.error || `HTTP error! status: ${response.status}`);
+    }
+
+    return data;
+  }
+
+  // Helper method to make API calls
+  async makeRequest(url, options = {}) {
+    try {
+      const response = await fetch(`${API_BASE_URL}${url}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+        ...options,
+      });
+
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error(`Auth API Error for ${url}:`, error);
+      throw error;
+    }
   }
 
   // Login method
-  static async login(email, password) {
-    await this.delay(1000); // Simulate network delay
+  async login(email, password) {
+    const data = await this.makeRequest('/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
 
-    const user = this.users.find(u => u.email === email && u.password === password);
-    
-    if (!user) {
-      throw new Error('Invalid email or password');
-    }
-
-    // Generate a mock JWT token
-    const token = `mock-jwt-token-${user.id}-${Date.now()}`;
-    
     return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      token: token
+      id: data.user.id,
+      name: data.user.name,
+      email: data.user.email,
+      token: data.token
     };
   }
 
   // Register method
-  static async register(name, email, password, confirmPassword) {
-    await this.delay(1000); // Simulate network delay
-
-    // Validation
+  async register(name, email, password, confirmPassword) {
+    // Client-side validation
     if (!name || !email || !password) {
       throw new Error('All fields are required');
     }
@@ -61,64 +61,80 @@ class AuthService {
       throw new Error('Password must be at least 6 characters long');
     }
 
-    // Check if user already exists
-    const existingUser = this.users.find(u => u.email === email);
-    if (existingUser) {
-      throw new Error('User with this email already exists');
-    }
+    const data = await this.makeRequest('/register', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, password }),
+    });
 
-    // Create new user
-    const newUser = {
-      id: this.users.length + 1,
-      name,
-      email,
-      password // In real app, this would be hashed
-    };
-
-    this.users.push(newUser);
-
-    // Generate a mock JWT token
-    const token = `mock-jwt-token-${newUser.id}-${Date.now()}`;
-    
     return {
-      id: newUser.id,
-      name: newUser.name,
-      email: newUser.email,
+      id: data.user.id,
+      name: data.user.name,
+      email: data.user.email,
+      token: data.token
+    };
+  }
+
+  // Validate token
+  async validateToken(token) {
+    const data = await this.makeRequest('/verify-token', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    return {
+      id: data.user.id,
+      name: data.user.name,
+      email: data.user.email,
       token: token
     };
   }
 
-  // Validate token (mock implementation)
-  static async validateToken(token) {
-    await this.delay(500);
-    
-    if (!token || !token.startsWith('mock-jwt-token-')) {
-      throw new Error('Invalid token');
-    }
+  // Get user profile
+  async getProfile(token) {
+    const data = await this.makeRequest('/profile', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
 
-    // Extract user ID from token (in real app, you'd decode the JWT)
-    const parts = token.split('-');
-    const userId = parseInt(parts[3]);
-    
-    const user = this.users.find(u => u.id === userId);
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      token: token
-    };
+    return data.user;
   }
 
-  // Logout (client-side only for mock)
-  static async logout() {
-    await this.delay(500);
-    // In real app, you might invalidate the token on the server
+  // Update user profile
+  async updateProfile(token, profileData) {
+    const data = await this.makeRequest('/profile', {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(profileData),
+    });
+
+    return data.user;
+  }
+
+  // Change password
+  async changePassword(token, currentPassword, newPassword) {
+    const data = await this.makeRequest('/change-password', {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+
+    return data;
+  }
+
+  // Logout (client-side cleanup)
+  async logout() {
+    // In a real app, you might want to invalidate the token on the server
+    // For now, we'll just do client-side cleanup
     return { success: true };
   }
 }
 
-export default AuthService;
+export default new AuthService();

@@ -1,5 +1,4 @@
-import mongodb from "mongodb";
-const ObjectId = mongodb.ObjectId;
+import IdGenerator from "../utils/idGenerator.js";
 
 let inventory;
 
@@ -16,81 +15,129 @@ export default class InventoryDAO {
         }
     }
 
-    static async addInventory(quantity, name, roomName) {
+    static async addInventory(quantity, name, roomName, description, userId) {
         try {
+            console.log("addInventory called with:", { quantity, name, roomName, description, userId });
+            
+            const customId = IdGenerator.generateId();
             const itemDoc = {
-                // roomId : roomId,
-                // itemId : itemId,
-                quantity: quantity,
+                _id: customId,
+                customId: customId, // Store custom ID for easy access
+                quantity: parseInt(quantity),
                 name: name,
-                roomName: roomName
-            }
-            return await inventory.insertOne(itemDoc);
-        }
-        catch (e) {
-            console.log(`Unable to post item : ${e}`);
-            return { error: e };
+                roomName: roomName,
+                description: description || '',
+                userId: userId.toString(),
+                createdAt: new Date(),
+                updatedAt: new Date()
+            };
+            
+            console.log("Inserting item document:", itemDoc);
+            
+            const result = await inventory.insertOne(itemDoc);
+            console.log("Insert result:", result);
+            
+            return { ...result, insertedId: customId };
+        } catch (e) {
+            console.error(`Unable to post item: ${e}`);
+            return { error: e.message };
         }
     }
 
-    static async getInventory(name) {
+    static async getInventory(name, userId) {
         try {
-            const item = await inventory.findOne({ "name": name });
+            const item = await inventory.findOne({ 
+                "name": name, 
+                "userId": userId.toString() 
+            });
             return item;
-        }
-        catch (e) {
-            console.error(`Unable to get item : ${e}`);
-            return { error: e };
+        } catch (e) {
+            console.error(`Unable to get item: ${e}`);
+            return { error: e.message };
         }
     }
 
-    static async updateInventory(prevrn, prevn, quantity, name, roomName) {
+    static async updateInventory(prevrn, prevn, quantity, name, roomName, description, userId) {
         try {
-            var item = await inventory.findOne({ "name": prevn, "roomName": prevrn });
-            var Id = item._id;
+            const updateDoc = {
+                quantity: parseInt(quantity),
+                name: name,
+                roomName: roomName,
+                description: description || '',
+                updatedAt: new Date()
+            };
+
             const updateItem = await inventory.updateOne(
-                { "_id": Id },
-                { $set: { "quantity": quantity, "name": name, "roomName": roomName } }
+                { 
+                    "name": prevn, 
+                    "roomName": prevrn, 
+                    "userId": userId.toString() 
+                },
+                { $set: updateDoc }
             );
             return updateItem;
-        }
-        catch (e) {
-            console.error(`Unable to update item : ${e}`);
-            return { error: e };
-        }
-    }
-
-    static async deleteInventory(name, roomName) {
-        try {
-            return await inventory.deleteOne({ "roomName": roomName, "name": name });
-        }
-        catch (e) {
-            console.error(`Unable to delete item : ${e}`);
-            return { error: e };
+        } catch (e) {
+            console.error(`Unable to update item: ${e}`);
+            return { error: e.message };
         }
     }
 
-    static async getInvetories(roomName) {
+    static async deleteInventory(name, roomName, userId) {
         try {
-            const inventoryResponse = await inventory.find({ "roomName": roomName });
+            return await inventory.deleteOne({ 
+                "roomName": roomName, 
+                "name": name, 
+                "userId": userId.toString() 
+            });
+        } catch (e) {
+            console.error(`Unable to delete item: ${e}`);
+            return { error: e.message };
+        }
+    }
+
+    static async getInventories(roomName, userId) {
+        try {
+            const userID = userId;
+            console.log(userID);
+            const query = { userId: userID.toString() };
+            if (roomName) {
+                query.roomName = roomName;
+            }
+            
+            const inventoryResponse = await inventory.find(query);
+            // console.log("In the DAO: ",inventoryResponse);
             return inventoryResponse.toArray();
-
-        }
-        catch (e) {
-            console.error(`Unable to get items : ${e}`);
-            return { error: e };
+        } catch (e) {
+            console.error(`Unable to get items: ${e}`);
+            return { error: e.message };
         }
     }
 
-    static async getInvetories() {
+    static async getAllInventories(userId) {
         try {
-            const inventoryResponse = await inventory.find();
-            return inventoryResponse.toArray();
-
-        }
-        catch (e) {
-            console.error(`Unable to get items : ${e}`);
-            return { error: e };
+            // Check if inventory collection is available
+            if (!inventory) {
+                console.error("Inventory collection not initialized");
+                return { error: "Database not initialized" };
+            }
+            
+            const query = { userId: userId.toString() };
+            
+            // Check items for this specific user
+            const userCount = await inventory.countDocuments(query);
+            console.log("Items for this user:", userCount);
+            
+            const inventoryResponse = await inventory.find(query);
+            const items = await inventoryResponse.toArray();
+            
+            if (items.length > 0) {
+                console.log("Sample returned items:", items.slice(0, 2));
+            }
+            
+            return items;
+        } catch (e) {
+            console.error(`Unable to get items: ${e}`);
+            return { error: e.message };
         }
     }
 }

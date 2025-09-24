@@ -9,8 +9,8 @@ const LandingPage = () => {
         <div className="container">
           <nav className="landing-nav">
             <div className="logo">
-              <div className="logo-icon">IM</div>
-              <span className="logo-text">Inventory Manager</span>
+              <div className="logo-icon">I</div>
+              <span className="logo-text">Easy Inventory</span>
             </div>
             <div className="nav-links">
               <a href="#home">Home</a>

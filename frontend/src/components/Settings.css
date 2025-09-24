@@ -95,6 +95,26 @@
   font-size: 16px;
 }
 
+.success-message {
+  color: #27ae60;
+  background-color: #d5f4e6;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-top: 8px;
+  border: 1px solid #a3d9b1;
+}
+
+.error-message {
+  color: #e74c3c;
+  background-color: #fdf2f2;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-top: 8px;
+  border: 1px solid #f5c6cb;
+}
+
 .settings-form {
   display: flex;
   flex-direction: column;

@@ -116,7 +116,7 @@ const Analysis = () => {
           </div>
         ) : (
           <div className="analytics-overview">
-            <div className="overview-card">
+            {/* <div className="overview-card">
               <div className="card-icon">
                 <BarChart3 size={24} />
               </div>
@@ -129,7 +129,7 @@ const Analysis = () => {
                   <span className="trend-period">vs last month</span>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             <div className="overview-card">
               <div className="card-icon">
