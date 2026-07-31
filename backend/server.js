@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import inventoryRoutes from "./api/inventory.routes.js";
 import authRoutes from "./api/auth.routes.js";
+import { errorHandler } from "./middleware/error.js";
 
 const app = express();
 
@@ -15,5 +16,7 @@ app.use("/api", inventoryRoutes);
 app.use("*", (req, res) => {
     res.status(404).json({ error: "Route not found" });
 });
+
+app.use(errorHandler);
 
 export default app;

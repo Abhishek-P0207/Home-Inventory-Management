@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit, Trash2, Package, Filter } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Package, Filter, Upload, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
 import ApiService from '../services/api.js';
 import './Inventory.css';
 
@@ -9,6 +9,15 @@ const Inventory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState(null);
+  const [uploadError, setUploadError] = useState(null);
+  const [showInvoicesModal, setShowInvoicesModal] = useState(false);
+  const [invoices, setInvoices] = useState([]);
+  const [loadingInvoices, setLoadingInvoices] = useState(false);
+  const [invoicesError, setInvoicesError] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -194,6 +203,90 @@ const Inventory = () => {
     setNewItem({ name: '', category: '', quantity: '', description: '' });
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+    if (!allowedTypes.includes(file.type)) {
+      setUploadError('Invalid file type. Please select a JPG, PNG, or PDF document.');
+      setSelectedFile(null);
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError('File size exceeds 5MB limit.');
+      setSelectedFile(null);
+      return;
+    }
+
+    setUploadError(null);
+    setUploadStatus(null);
+    setSelectedFile(file);
+  };
+
+  const handleUploadSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedFile) return;
+
+    setUploading(true);
+    setUploadError(null);
+    setUploadStatus(null);
+
+    try {
+      const response = await ApiService.uploadDocument(selectedFile);
+      setUploadStatus({
+        message: response.message || 'Document uploaded successfully to AWS S3. Processing initiated.',
+        status: response.status || 'processing_started',
+        file: response.file
+      });
+      setSelectedFile(null);
+    } catch (err) {
+      console.error('Upload failed:', err);
+      setUploadError(err.message || 'Failed to upload document. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const closeUploadModal = () => {
+    setShowUploadModal(false);
+    setSelectedFile(null);
+    setUploadStatus(null);
+    setUploadError(null);
+  };
+
+  const fetchInvoices = async () => {
+    setLoadingInvoices(true);
+    setInvoicesError(null);
+    try {
+      const data = await ApiService.getInvoices();
+      setInvoices(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Error fetching invoices:', err);
+      setInvoicesError('Failed to load invoices');
+    } finally {
+      setLoadingInvoices(false);
+    }
+  };
+
+  const handleOpenInvoicesModal = () => {
+    setShowInvoicesModal(true);
+    fetchInvoices();
+  };
+
+  const closeInvoicesModal = () => {
+    setShowInvoicesModal(false);
+  };
+
+  const handleViewBill = async (invoiceId) => {
+    try {
+      await ApiService.viewInvoiceFile(invoiceId);
+    } catch (err) {
+      alert('Could not open document: ' + err.message);
+    }
+  };
+
   return (
     <div className="inventory">
       <div className="container">
@@ -203,14 +296,24 @@ const Inventory = () => {
             <p>Manage your complete inventory with detailed tracking</p>
             {error && <div className="error-message">{error}</div>}
           </div>
-          <button 
-            className="btn btn-primary"
-            onClick={() => setShowAddModal(true)}
-            disabled={loading}
-          >
-            <Plus size={16} />
-            {loading ? 'Loading...' : 'Add Item'}
-          </button>
+          <div className="header-actions">
+            <button 
+              className="btn btn-secondary btn-upload"
+              onClick={() => setShowUploadModal(true)}
+              disabled={loading}
+            >
+              <Upload size={16} />
+              Upload Document
+            </button>
+            <button 
+              className="btn btn-primary"
+              onClick={() => setShowAddModal(true)}
+              disabled={loading}
+            >
+              <Plus size={16} />
+              {loading ? 'Loading...' : 'Add Item'}
+            </button>
+          </div>
         </div>
 
         <div className="inventory-filters">
@@ -236,6 +339,14 @@ const Inventory = () => {
               ))}
             </select>
           </div>
+
+          <button 
+            className="view-invoices-btn"
+            onClick={handleOpenInvoicesModal}
+          >
+            <FileText size={18} />
+            View Invoices
+          </button>
         </div>
 
         {loading && (
@@ -356,6 +467,136 @@ const Inventory = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {showUploadModal && (
+          <div className="modal-overlay" onClick={closeUploadModal}>
+            <div className="modal upload-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>Upload Document / Invoice</h2>
+                <button className="close-btn" onClick={closeUploadModal}>×</button>
+              </div>
+              <form onSubmit={handleUploadSubmit}>
+                <div className="upload-dropzone">
+                  <FileText size={48} className="upload-icon" />
+                  <p className="dropzone-text">Select invoice, receipt, or inventory document</p>
+                  <p className="dropzone-hint">Supported formats: JPG, PNG, PDF (Max 5MB)</p>
+                  
+                  <input
+                    type="file"
+                    id="document-upload"
+                    accept=".jpg,.jpeg,.png,.pdf"
+                    onChange={handleFileChange}
+                    className="file-input-hidden"
+                  />
+                  <label htmlFor="document-upload" className="btn btn-secondary select-file-btn">
+                    Browse File
+                  </label>
+                </div>
+
+                {selectedFile && (
+                  <div className="selected-file-card">
+                    <FileText size={24} />
+                    <div className="file-info">
+                      <span className="file-name">{selectedFile.name}</span>
+                      <span className="file-size">{(selectedFile.size / 1024).toFixed(1)} KB</span>
+                    </div>
+                  </div>
+                )}
+
+                {uploadError && (
+                  <div className="upload-alert error">
+                    <AlertCircle size={18} />
+                    <span>{uploadError}</span>
+                  </div>
+                )}
+
+                {uploadStatus && (
+                  <div className="upload-alert success">
+                    <CheckCircle2 size={18} />
+                    <div>
+                      <strong>{uploadStatus.message}</strong>
+                      <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem' }}>
+                        Status: <code>{uploadStatus.status}</code> (Saved in DB, pending processing)
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="modal-actions">
+                  <button type="button" className="btn btn-secondary" onClick={closeUploadModal}>
+                    {uploadStatus ? 'Close' : 'Cancel'}
+                  </button>
+                  {!uploadStatus && (
+                    <button type="submit" className="btn btn-primary" disabled={!selectedFile || uploading}>
+                      {uploading ? 'Uploading...' : 'Upload & Save'}
+                    </button>
+                  )}
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {showInvoicesModal && (
+          <div className="modal-overlay" onClick={closeInvoicesModal}>
+            <div className="modal invoices-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>Uploaded Invoices & Documents</h2>
+                <button className="close-btn" onClick={closeInvoicesModal}>×</button>
+              </div>
+
+              <div className="invoices-modal-content">
+                {invoicesError && <div className="upload-alert error">{invoicesError}</div>}
+
+                {loadingInvoices ? (
+                  <div className="loading-state">
+                    <FileText size={40} />
+                    <p>Loading invoices...</p>
+                  </div>
+                ) : invoices.length === 0 ? (
+                  <div className="empty-state" style={{ padding: '40px 20px' }}>
+                    <FileText size={48} />
+                    <h3>No invoices uploaded yet</h3>
+                    <p>Upload receipts or bill documents to view them here.</p>
+                  </div>
+                ) : (
+                  <div className="invoices-list">
+                    {invoices.map((inv) => (
+                      <div key={inv._id || inv.customId} className="invoice-item-card">
+                        <div className="invoice-item-icon">
+                          <FileText size={24} />
+                        </div>
+                        <div className="invoice-item-details">
+                          <span className="invoice-name">{inv.originalName}</span>
+                          <span className="invoice-meta">
+                            Uploaded: {new Date(inv.createdAt).toLocaleDateString()} • {(inv.size / 1024).toFixed(1)} KB
+                          </span>
+                          <div className="invoice-status-row">
+                            <span className={`status-badge status-${inv.status || 'pending'}`}>
+                              Processing: {inv.status || 'pending'}
+                            </span>
+                          </div>
+                        </div>
+                        <button 
+                          className="btn-view-bill"
+                          onClick={() => handleViewBill(inv._id || inv.customId)}
+                        >
+                          View Bill
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="modal-actions" style={{ padding: '0 24px 24px' }}>
+                <button className="btn btn-secondary" onClick={closeInvoicesModal}>
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         )}

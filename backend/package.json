@@ -6,16 +6,15 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon index.js",
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "server": "nodemon index.js",
-    "client": "cd frontend && npm start",
-    "build": "cd frontend && npm run build"
+    "dev": "pnpm run start",
+    "build": "pnpm run build"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1097.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^2.4.3",
     "concurrently": "^8.2.2",
@@ -24,6 +23,8 @@
     "express": "^4.21.1",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.11.0",
-    "nodemon": "^3.1.7"
+    "multer": "^2.2.0",
+    "nodemon": "^3.1.7",
+    "uuid": "^14.0.1"
   }
 }

@@ -8,7 +8,7 @@ export default class UserDAO {
             return;
         }
         try {
-            users = await conn.db("inventory").collection("users");
+            users = await conn.db("HIMA").collection("users");
 
             // unique index on email
             await users.createIndex({ email: 1 }, { unique: true });

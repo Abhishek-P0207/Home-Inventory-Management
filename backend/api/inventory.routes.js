@@ -1,6 +1,7 @@
 import express from "express";
 import InventoryController from "./inventory_controller.js";
 import { authenticateToken } from "../middleware/auth.js";
+import { handleFileUpload } from "../middleware/uploadMiddleware.js";
 
 const router = express.Router();
 
@@ -12,5 +13,13 @@ router.route("/room/:roomName/item/:name")
     .put(authenticateToken, InventoryController.apiUpdateInventory)
     .delete(authenticateToken, InventoryController.apiDeleteInventory);
 router.route("/item/:name").get(authenticateToken, InventoryController.apiGetInventory);
+
+// Invoice upload & retrieval endpoints (require authentication)
+router.route("/upload").post(authenticateToken, handleFileUpload, InventoryController.invoiceUpload);
+router.route("/invoices").get(authenticateToken, InventoryController.apiGetInvoices);
+router.route("/invoices/:id/file").get(authenticateToken, InventoryController.apiGetInvoiceFile);
+
+// AWS Webhook endpoint for receiving processing completion notifications
+router.route("/webhook/aws").post(InventoryController.awsWebhook);
 
 export default router;

@@ -1,5 +1,5 @@
 // API service for backend communication
-const API_BASE_URL = '/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 class ApiService {
   // Helper method to handle API responses
@@ -31,7 +31,7 @@ class ApiService {
         ...options,
       };
 
-      const response = await fetch(`${API_BASE_URL}${url}`, requestConfig);
+      const response = await fetch(`${API_URL}${url}`, requestConfig);
 
       return await this.handleResponse(response);
     } catch (error) {
@@ -129,17 +129,10 @@ class ApiService {
         totalItems,
         lowStock: lowStockItems.length,
         categories: categories.length,
-        recentActivity: Math.floor(Math.random() * 20) + 10,
         totalValue: categoryStats.reduce((sum, cat) => sum + cat.value, 0),
         monthlyChange: Math.floor(Math.random() * 20) + 5,
         topCategories: categoryStats.slice(0, 3),
-        lowStockTrend,
-        recentActivity: items.slice(-4).map(item => ({
-          date: new Date().toISOString().split('T')[0],
-          action: 'Added',
-          item: item.name,
-          quantity: item.quantity
-        }))
+        lowStockTrend
       };
     } catch (error) {
       console.error('Error fetching analytics:', error);
@@ -158,8 +151,7 @@ class ApiService {
       return {
         totalItems: items.length,
         lowStock: lowStockItems.length,
-        categories: categories.length,
-        recentActivity: Math.floor(Math.random() * 20) + 10
+        categories: categories.length
       };
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
@@ -199,6 +191,53 @@ class ApiService {
         }));
     } catch (error) {
       console.error('Error fetching low stock items:', error);
+      throw error;
+    }
+  }
+
+  // Upload document / invoice for processing
+  async uploadDocument(file) {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const authHeaders = this.getAuthHeaders();
+
+      const response = await fetch(`${API_URL}/upload`, {
+        method: 'POST',
+        headers: {
+          ...authHeaders,
+        },
+        body: formData,
+      });
+
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      throw error;
+    }
+  }
+
+  // Fetch user's uploaded invoices
+  async getInvoices() {
+    return this.makeRequest('/invoices');
+  }
+
+  // Securely view private S3 invoice document in browser
+  async viewInvoiceFile(invoiceId) {
+    try {
+      const authHeaders = this.getAuthHeaders();
+      const response = await fetch(`${API_URL}/invoices/${invoiceId}/file`, {
+        headers: authHeaders
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to load document (${response.status})`);
+      }
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
+    } catch (error) {
+      console.error('Error viewing invoice file:', error);
       throw error;
     }
   }

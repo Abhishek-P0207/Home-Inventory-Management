@@ -4,7 +4,6 @@ import { authenticateToken } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// console.log("Hello");
 // Public routes (no authentication required)
 router.route("/register").post(AuthCtrl.apiRegister);
 router.route("/login").post(AuthCtrl.apiLogin);

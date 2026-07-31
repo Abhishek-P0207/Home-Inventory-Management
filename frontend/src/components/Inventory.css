@@ -347,3 +347,256 @@ textarea.form-input {
     margin: 10px;
   }
 }
+
+/* Header Action Buttons */
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.btn-upload {
+  background-color: #ffffff;
+  color: #2c3e50;
+  border: 1px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-upload:hover {
+  background-color: #f8fafc;
+  border-color: #94a3b8;
+  color: #1e293b;
+}
+
+/* Upload Dropzone & Modal Styles */
+.upload-dropzone {
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 32px 20px;
+  text-align: center;
+  background: #f8fafc;
+  margin-bottom: 20px;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.upload-dropzone:hover {
+  border-color: #3b82f6;
+  background-color: #f0f6ff;
+}
+
+.upload-icon {
+  color: #64748b;
+  margin-bottom: 12px;
+}
+
+.dropzone-text {
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 6px;
+  font-size: 15px;
+}
+
+.dropzone-hint {
+  color: #64748b;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.file-input-hidden {
+  display: none;
+}
+
+.select-file-btn {
+  display: inline-block;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.selected-file-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  color: #334155;
+}
+
+.file-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.file-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.file-size {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.upload-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.upload-alert.error {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.upload-alert.success {
+  background-color: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+/* View Invoices Button on Right End of Filter Bar */
+.view-invoices-btn {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #2c3e50;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-invoices-btn:hover {
+  background-color: #f8fafc;
+  border-color: #94a3b8;
+  color: #1e293b;
+}
+
+/* Invoices Modal Styles */
+.invoices-modal {
+  max-width: 600px;
+}
+
+.invoices-modal-content {
+  padding: 0 24px 16px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.invoices-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.invoice-item-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  transition: background-color 0.2s ease;
+}
+
+.invoice-item-card:hover {
+  background-color: #f1f5f9;
+}
+
+.invoice-item-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background-color: #e0f2fe;
+  color: #0284c7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.invoice-item-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.invoice-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.invoice-meta {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.invoice-status-row {
+  margin-top: 2px;
+}
+
+.status-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  text-transform: capitalize;
+}
+
+.status-badge.status-pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.status-processed {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.btn-view-bill {
+  background-color: #3b82f6;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-view-bill:hover {
+  background-color: #2563eb;
+}

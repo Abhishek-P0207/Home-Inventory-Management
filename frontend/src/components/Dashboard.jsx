@@ -8,8 +8,7 @@ const Dashboard = ({ user }) => {
   const [stats, setStats] = useState({
     totalItems: 0,
     lowStock: 0,
-    categories: 0,
-    recentActivity: 0
+    categories: 0
   });
   const [recentItems, setRecentItems] = useState([]);
   const [lowStockItems, setLowStockItems] = useState([]);
@@ -39,26 +38,14 @@ const Dashboard = ({ user }) => {
       console.error('Error fetching dashboard data:', error);
       setError('Failed to load dashboard data. Please try again.');
       
-      // Fallback to dummy data for demo
+      // Reset to empty state when data cannot be loaded
       setStats({
-        totalItems: 156,
-        lowStock: 8,
-        categories: 12,
-        recentActivity: 23
+        totalItems: 0,
+        lowStock: 0,
+        categories: 0
       });
-
-      setRecentItems([
-        { id: 1, name: 'Laptop Dell XPS', category: 'Electronics', quantity: 5, addedDate: '2024-01-15' },
-        { id: 2, name: 'Office Chair', category: 'Furniture', quantity: 12, addedDate: '2024-01-14' },
-        { id: 3, name: 'Printer Paper', category: 'Office Supplies', quantity: 50, addedDate: '2024-01-13' },
-        { id: 4, name: 'Wireless Mouse', category: 'Electronics', quantity: 8, addedDate: '2024-01-12' }
-      ]);
-
-      setLowStockItems([
-        { id: 1, name: 'Ink Cartridge', category: 'Office Supplies', quantity: 2, threshold: 10 },
-        { id: 2, name: 'USB Cable', category: 'Electronics', quantity: 3, threshold: 15 },
-        { id: 3, name: 'Notebook', category: 'Office Supplies', quantity: 1, threshold: 5 }
-      ]);
+      setRecentItems([]);
+      setLowStockItems([]);
     } finally {
       setLoading(false);
     }
@@ -81,7 +68,6 @@ const Dashboard = ({ user }) => {
 
         {loading ? (
           <div className="loading-stats">
-            <div className="loading-card">Loading...</div>
             <div className="loading-card">Loading...</div>
             <div className="loading-card">Loading...</div>
             <div className="loading-card">Loading...</div>
@@ -115,16 +101,6 @@ const Dashboard = ({ user }) => {
               <div className="stat-content">
                 <h3>{stats.categories}</h3>
                 <p>Categories</p>
-              </div>
-            </div>
-
-            <div className="stat-card">
-              <div className="stat-icon">
-                <Package size={24} />
-              </div>
-              <div className="stat-content">
-                <h3>{stats.recentActivity}</h3>
-                <p>Recent Activity</p>
               </div>
             </div>
           </div>

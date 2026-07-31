@@ -47,13 +47,15 @@ export default class AuthController {
             }
 
             // Generate JWT token
+            const secret = process.env.JWT_SECRET
+            const expiresIn = process.env.JWT_EXPIRES_IN;
             const token = jwt.sign(
                 { 
                     userId: result.insertedId,
                     email: result.email 
                 },
-                process.env.JWT_SECRET,
-                { expiresIn: process.env.JWT_EXPIRES_IN }
+                secret,
+                { expiresIn }
             );
 
             // Return user data (without password) and token
@@ -108,13 +110,15 @@ export default class AuthController {
             await UserDAO.updateLastLogin(user._id);
 
             // Generate JWT token
+            const secret = process.env.JWT_SECRET || 'supersecretkey_home_inventory_management_2026';
+            const expiresIn = process.env.JWT_EXPIRES_IN || '24h';
             const token = jwt.sign(
                 { 
                     userId: user._id,
                     email: user.email 
                 },
-                process.env.JWT_SECRET,
-                { expiresIn: process.env.JWT_EXPIRES_IN }
+                secret,
+                { expiresIn }
             );
 
             // Return user data (without password) and token

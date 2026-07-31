@@ -8,7 +8,7 @@ export default class InventoryDAO {
             return;
         }
         try {
-            inventory = await conn.db("inventory").collection("inventory");
+            inventory = await conn.db("HIMA").collection("inventory");
         }
         catch (e) {
             console.error(`Unable to establish connection handle : ${e}`);

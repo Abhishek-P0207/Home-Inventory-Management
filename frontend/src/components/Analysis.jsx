@@ -8,8 +8,7 @@ const Analysis = () => {
     totalValue: 0,
     monthlyChange: 0,
     topCategories: [],
-    lowStockTrend: [],
-    recentActivity: []
+    lowStockTrend: []
   });
   const [timeRange, setTimeRange] = useState('30d');
   const [loading, setLoading] = useState(true);
@@ -30,29 +29,12 @@ const Analysis = () => {
       console.error('Error fetching analytics data:', error);
       setError('Failed to load analytics data. Please try again.');
       
-      // Fallback to dummy data for demo
+      // Reset to empty state when data cannot be loaded
       setAnalyticsData({
-        totalValue: 45750,
-        monthlyChange: 12.5,
-        topCategories: [
-          { name: 'Electronics', count: 45, value: 25000, percentage: 55 },
-          { name: 'Furniture', count: 32, value: 12000, percentage: 26 },
-          { name: 'Office Supplies', count: 78, value: 8750, percentage: 19 }
-        ],
-        lowStockTrend: [
-          { month: 'Jan', count: 5 },
-          { month: 'Feb', count: 8 },
-          { month: 'Mar', count: 12 },
-          { month: 'Apr', count: 7 },
-          { month: 'May', count: 9 },
-          { month: 'Jun', count: 6 }
-        ],
-        recentActivity: [
-          { date: '2024-01-15', action: 'Added', item: 'Laptop Dell XPS', quantity: 5 },
-          { date: '2024-01-14', action: 'Updated', item: 'Office Chair', quantity: 12 },
-          { date: '2024-01-13', action: 'Removed', item: 'Old Printer', quantity: 1 },
-          { date: '2024-01-12', action: 'Added', item: 'Wireless Mouse', quantity: 8 }
-        ]
+        totalValue: 0,
+        monthlyChange: 0,
+        topCategories: [],
+        lowStockTrend: []
       });
     } finally {
       setLoading(false);
@@ -210,32 +192,6 @@ const Analysis = () => {
                   </div>
                 ))}
               </div>
-            </div>
-          </div>
-
-          <div className="analytics-section">
-            <div className="section-header">
-              <h2>Recent Activity</h2>
-              <p>Latest inventory changes and updates</p>
-            </div>
-            <div className="activity-list">
-              {analyticsData.recentActivity.map((activity, index) => (
-                <div key={index} className="activity-item">
-                  <div className={`activity-icon ${activity.action.toLowerCase()}`}>
-                    {activity.action === 'Added' && <TrendingUp size={16} />}
-                    {activity.action === 'Updated' && <BarChart3 size={16} />}
-                    {activity.action === 'Removed' && <TrendingDown size={16} />}
-                  </div>
-                  <div className="activity-content">
-                    <div className="activity-main">
-                      <span className="activity-action">{activity.action}</span>
-                      <span className="activity-item">{activity.item}</span>
-                      <span className="activity-quantity">({activity.quantity} units)</span>
-                    </div>
-                    <div className="activity-date">{activity.date}</div>
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
         </div>

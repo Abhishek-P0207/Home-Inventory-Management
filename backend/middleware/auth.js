@@ -12,7 +12,8 @@ export const authenticateToken = async (req, res, next) => {
         }
 
         // Verify token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const secret = process.env.JWT_SECRET;
+        const decoded = jwt.verify(token, secret);
         console.log(decoded);
         // Check if user still exists
         const user = await UserDAO.getUserById(decoded.userId);
