@@ -19,6 +19,12 @@ router.route("/upload").post(authenticateToken, handleFileUpload, InventoryContr
 router.route("/invoices").get(authenticateToken, InventoryController.apiGetInvoices);
 router.route("/invoices/:id/file").get(authenticateToken, InventoryController.apiGetInvoiceFile);
 
+// Draft endpoints for extracted invoice review
+router.route("/drafts/pending").get(authenticateToken, InventoryController.apiGetPendingDrafts);
+router.route("/drafts/invoice/:invoiceId").get(authenticateToken, InventoryController.apiGetDraftByInvoiceId);
+router.route("/drafts/:draftId/approve").post(authenticateToken, InventoryController.apiApproveDraft);
+router.route("/drafts/:draftId/cancel").post(authenticateToken, InventoryController.apiCancelDraft);
+
 // AWS Webhook endpoint for receiving processing completion notifications
 router.route("/webhook/aws").post(InventoryController.awsWebhook);
 

@@ -1,5 +1,6 @@
 import InventoryDAO from "../dao/inventoryDAO.js";
 import InvoiceDAO from "../dao/invoiceDAO.js";
+import DraftDAO from "../dao/draftDAO.js";
 import { uploadFileToS3, getFileFromS3 } from "../utils/s3.js";
 
 
@@ -139,7 +140,7 @@ export default class InventoryController {
         }
     }
 
-    // Upload invoice document/image to S3 and record metadata in DB
+    // Upload invoice document/image to S3 and record metadata in DB with PENDING status
     static async invoiceUpload(req, res) {
         try {
             if (!req.file) {
@@ -151,7 +152,7 @@ export default class InventoryController {
             const userId = req.user.userId;
             const uploadResult = await uploadFileToS3(req.file);
 
-            // Save in DB with status "pending"
+            // Save in DB with status "PENDING"
             const dbResult = await InvoiceDAO.addInvoice({
                 userId,
                 s3Bucket: uploadResult.bucket,
@@ -159,7 +160,7 @@ export default class InventoryController {
                 originalName: uploadResult.originalName,
                 mimeType: uploadResult.mimeType,
                 size: uploadResult.size,
-                status: "pending"
+                status: "PENDING"
             });
 
             if (dbResult.error) {
@@ -168,7 +169,7 @@ export default class InventoryController {
 
             return res.status(200).json({
                 message: "Document uploaded successfully to S3 and recorded in DB.",
-                status: "pending",
+                status: "PENDING",
                 invoice: dbResult.invoice
             });
         } catch (error) {
@@ -216,6 +217,109 @@ export default class InventoryController {
         }
     }
 
+    // Get all pending drafts for authenticated user
+    static async apiGetPendingDrafts(req, res, next) {
+        try {
+            const userId = req.user.userId;
+            const pendingDrafts = await DraftDAO.getPendingDraftsForUser(userId);
+            res.json(pendingDrafts || []);
+        } catch (e) {
+            next(e);
+        }
+    }
+
+    // Get draft details by invoice ID
+    static async apiGetDraftByInvoiceId(req, res, next) {
+        try {
+            const invoiceId = req.params.invoiceId;
+            const userId = req.user.userId;
+            const draft = await DraftDAO.getDraftByInvoiceId(invoiceId, userId);
+            if (!draft) {
+                return res.status(404).json({ error: "Draft not found for this invoice" });
+            }
+            res.json(draft);
+        } catch (e) {
+            next(e);
+        }
+    }
+
+    // Approve draft and add extracted items to user inventory
+    static async apiApproveDraft(req, res, next) {
+        try {
+            const draftId = req.params.draftId;
+            const userId = req.user.userId;
+            const { items, vendor, totalAmount } = req.body;
+
+            const draft = await DraftDAO.getDraftById(draftId, userId);
+            if (!draft) {
+                return res.status(404).json({ error: "Draft not found" });
+            }
+
+            const itemsToAdd = items || draft.items || [];
+            if (itemsToAdd.length === 0) {
+                return res.status(400).json({ error: "No items to add to inventory" });
+            }
+
+            // Insert each item into inventory
+            const addedItems = [];
+            for (const item of itemsToAdd) {
+                const addRes = await InventoryDAO.addInventory(
+                    item.quantity || 1,
+                    item.name,
+                    item.category || item.roomName || "General",
+                    item.description || (vendor ? `From ${vendor}` : "Extracted from invoice"),
+                    userId
+                );
+                if (addRes.insertedId) {
+                    addedItems.push(addRes.insertedId);
+                }
+            }
+
+            // Update draft status to APPROVED
+            await DraftDAO.updateDraft(draftId, userId, itemsToAdd, vendor, totalAmount);
+            await DraftDAO.markDraftStatus(draftId, userId, "APPROVED");
+
+            // Update associated invoice status to COMPLETED
+            if (draft.invoiceId) {
+                await InvoiceDAO.updateInvoiceStatus(draft.invoiceId, "COMPLETED");
+            }
+
+            res.json({
+                message: "Draft approved and items successfully added to inventory!",
+                addedCount: addedItems.length,
+                status: "COMPLETED"
+            });
+        } catch (e) {
+            next(e);
+        }
+    }
+
+    // Cancel draft review and mark invoice as FAILED
+    static async apiCancelDraft(req, res, next) {
+        try {
+            const draftId = req.params.draftId;
+            const userId = req.user.userId;
+
+            const draft = await DraftDAO.getDraftById(draftId, userId);
+            if (!draft) {
+                return res.status(404).json({ error: "Draft not found" });
+            }
+
+            await DraftDAO.markDraftStatus(draftId, userId, "CANCELLED");
+
+            if (draft.invoiceId) {
+                await InvoiceDAO.updateInvoiceStatus(draft.invoiceId, "FAILED", "Draft review cancelled by user");
+            }
+
+            res.json({
+                message: "Draft review cancelled",
+                status: "FAILED"
+            });
+        } catch (e) {
+            next(e);
+        }
+    }
+
     // Webhook endpoint to receive processing notifications from AWS
     static async awsWebhook(req, res) {
         try {
@@ -226,8 +330,6 @@ export default class InventoryController {
 
             const payload = req.body;
             console.log("Received AWS Webhook processing result:", payload);
-
-            // Webhook processing logic can be handled here (e.g., updating database record)
 
             return res.status(200).json({
                 status: "success",

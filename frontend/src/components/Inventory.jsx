@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit, Trash2, Package, Filter, Upload, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Package, Filter, Upload, FileText, CheckCircle2, AlertCircle, AlertTriangle, Eye, X, Check } from 'lucide-react';
 import ApiService from '../services/api.js';
 import './Inventory.css';
 
@@ -14,10 +14,22 @@ const Inventory = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState(null);
   const [uploadError, setUploadError] = useState(null);
+
+  // Invoices & Draft States
   const [showInvoicesModal, setShowInvoicesModal] = useState(false);
   const [invoices, setInvoices] = useState([]);
+  const [pendingDrafts, setPendingDrafts] = useState([]);
   const [loadingInvoices, setLoadingInvoices] = useState(false);
   const [invoicesError, setInvoicesError] = useState(null);
+
+  // Draft Review Modal States
+  const [showDraftModal, setShowDraftModal] = useState(false);
+  const [activeDraft, setActiveDraft] = useState(null);
+  const [draftItems, setDraftItems] = useState([]);
+  const [approvingDraft, setApprovingDraft] = useState(false);
+  const [draftActionError, setDraftActionError] = useState(null);
+  const [draftActionSuccess, setDraftActionSuccess] = useState(null);
+
   const [editingItem, setEditingItem] = useState(null);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -32,6 +44,7 @@ const Inventory = () => {
 
   useEffect(() => {
     fetchItems();
+    checkPendingDrafts();
   }, []);
 
   useEffect(() => {
@@ -41,11 +54,8 @@ const Inventory = () => {
   const fetchItems = async () => {
     setLoading(true);
     setError(null);
-    console.log('🔄 Fetching items...');
-    
     try {
       const data = await ApiService.getAllItems();
-      
       const formattedItems = data.map(item => ({
         id: item._id || Math.random().toString(36).substring(2, 9),
         name: item.name,
@@ -53,17 +63,12 @@ const Inventory = () => {
         quantity: item.quantity,
         description: item.description || 'No description available'
       }));
-      
       setItems(formattedItems);
-      
-      // Extract unique categories
       const uniqueCategories = [...new Set(formattedItems.map(item => item.category))];
       setCategories(uniqueCategories);
     } catch (error) {
       console.error('Error fetching items:', error);
       setError('Failed to load inventory items. Please try again.');
-      
-      // Don't use fallback dummy data - let's see the real issue
       setItems([]);
       setCategories([]);
     } finally {
@@ -71,20 +76,26 @@ const Inventory = () => {
     }
   };
 
+  const checkPendingDrafts = async () => {
+    try {
+      const drafts = await ApiService.getPendingDrafts();
+      setPendingDrafts(Array.isArray(drafts) ? drafts : []);
+    } catch (err) {
+      console.error('Error checking pending drafts:', err);
+    }
+  };
+
   const filterItems = () => {
     let filtered = items;
-
     if (searchTerm) {
       filtered = filtered.filter(item =>
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.category.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-
     if (selectedCategory !== 'all') {
       filtered = filtered.filter(item => item.category === selectedCategory);
     }
-
     setFilteredItems(filtered);
   };
 
@@ -92,19 +103,14 @@ const Inventory = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    
-    
     try {
-      const result = await ApiService.addItem({
+      await ApiService.addItem({
         name: newItem.name,
         category: newItem.category,
         quantity: newItem.quantity,
         description: newItem.description
       });
-      
-      // Refresh the list after successful addition
       await fetchItems();
-      
       setNewItem({ name: '', category: '', quantity: '', description: '' });
       setShowAddModal(false);
     } catch (error) {
@@ -130,7 +136,6 @@ const Inventory = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    
     try {
       await ApiService.updateItem(
         editingItem.name,
@@ -142,34 +147,13 @@ const Inventory = () => {
           description: newItem.description
         }
       );
-      
-      // Refresh the list after successful update
       await fetchItems();
-      
       setNewItem({ name: '', category: '', quantity: '', description: '' });
       setEditingItem(null);
       setShowAddModal(false);
     } catch (error) {
       console.error('Error updating item:', error);
       setError('Failed to update item. Please try again.');
-      
-      // Fallback: update local state for demo
-      const updatedItems = items.map(item =>
-        item.id === editingItem.id
-          ? {
-              ...item,
-              name: newItem.name,
-              category: newItem.category,
-              quantity: parseInt(newItem.quantity),
-              description: newItem.description
-            }
-          : item
-      );
-      setItems(updatedItems);
-      
-      setNewItem({ name: '', category: '', quantity: '', description: '' });
-      setEditingItem(null);
-      setShowAddModal(false);
     } finally {
       setLoading(false);
     }
@@ -177,21 +161,14 @@ const Inventory = () => {
 
   const handleDeleteItem = async (item) => {
     if (!window.confirm('Are you sure you want to delete this item?')) return;
-
     setLoading(true);
     setError(null);
-    
     try {
       await ApiService.deleteItem(item.name, item.category);
-      
-      // Refresh the list after successful deletion
       await fetchItems();
     } catch (error) {
       console.error('Error deleting item:', error);
       setError('Failed to delete item. Please try again.');
-      
-      // Fallback: remove from local state for demo
-      setItems(items.filter(i => i.id !== item.id));
     } finally {
       setLoading(false);
     }
@@ -236,11 +213,13 @@ const Inventory = () => {
     try {
       const response = await ApiService.uploadDocument(selectedFile);
       setUploadStatus({
-        message: response.message || 'Document uploaded successfully to AWS S3. Processing initiated.',
-        status: response.status || 'processing_started',
-        file: response.file
+        message: response.message || 'Document uploaded to S3 with status PENDING.',
+        status: response.status || 'PENDING',
+        file: response.invoice
       });
       setSelectedFile(null);
+      fetchInvoices();
+      checkPendingDrafts();
     } catch (err) {
       console.error('Upload failed:', err);
       setUploadError(err.message || 'Failed to upload document. Please try again.');
@@ -262,6 +241,7 @@ const Inventory = () => {
     try {
       const data = await ApiService.getInvoices();
       setInvoices(Array.isArray(data) ? data : []);
+      await checkPendingDrafts();
     } catch (err) {
       console.error('Error fetching invoices:', err);
       setInvoicesError('Failed to load invoices');
@@ -287,6 +267,107 @@ const Inventory = () => {
     }
   };
 
+  // Open Draft Review Modal
+  const handleOpenDraftModal = async (invoiceId) => {
+    setDraftActionError(null);
+    setDraftActionSuccess(null);
+    setApprovingDraft(false);
+    try {
+      const draftData = await ApiService.getDraftByInvoiceId(invoiceId);
+      if (!draftData) {
+        alert('Draft data not found for this invoice.');
+        return;
+      }
+      setActiveDraft(draftData);
+      setDraftItems(draftData.items ? draftData.items.map(item => ({ ...item })) : []);
+      setShowDraftModal(true);
+    } catch (err) {
+      console.error('Error opening draft modal:', err);
+      alert('Failed to load extracted draft: ' + err.message);
+    }
+  };
+
+  const handleDraftItemChange = (index, field, value) => {
+    const updated = [...draftItems];
+    updated[index][field] = field === 'quantity' ? parseInt(value) || 0 : value;
+    setDraftItems(updated);
+  };
+
+  const handleAddDraftItemRow = () => {
+    setDraftItems([
+      ...draftItems,
+      { name: 'New Item', category: 'General', quantity: 1, description: '', price: 0 }
+    ]);
+  };
+
+  const handleRemoveDraftItemRow = (index) => {
+    setDraftItems(draftItems.filter((_, i) => i !== index));
+  };
+
+  const handleApproveDraft = async () => {
+    if (!activeDraft) return;
+    if (draftItems.length === 0) {
+      setDraftActionError('Please keep at least one item in the draft to add to inventory.');
+      return;
+    }
+
+    setApprovingDraft(true);
+    setDraftActionError(null);
+    setDraftActionSuccess(null);
+
+    try {
+      const res = await ApiService.approveDraft(activeDraft._id, {
+        items: draftItems,
+        vendor: activeDraft.vendor,
+        totalAmount: activeDraft.totalAmount
+      });
+      setDraftActionSuccess(res.message || 'Draft approved and items added to inventory!');
+
+      // Refresh inventory & invoices lists
+      await fetchItems();
+      await fetchInvoices();
+      await checkPendingDrafts();
+
+      setTimeout(() => {
+        setShowDraftModal(false);
+        setActiveDraft(null);
+      }, 1200);
+    } catch (err) {
+      console.error('Failed to approve draft:', err);
+      setDraftActionError(err.message || 'Failed to approve draft');
+    } finally {
+      setApprovingDraft(false);
+    }
+  };
+
+  const handleCancelDraft = async () => {
+    if (!activeDraft) return;
+    if (!window.confirm('Are you sure you want to cancel this draft review?')) return;
+
+    setApprovingDraft(true);
+    setDraftActionError(null);
+    setDraftActionSuccess(null);
+
+    try {
+      const res = await ApiService.cancelDraft(activeDraft._id);
+      setDraftActionSuccess(res.message || 'Draft review cancelled.');
+      await fetchInvoices();
+      await checkPendingDrafts();
+
+      setTimeout(() => {
+        setShowDraftModal(false);
+        setActiveDraft(null);
+      }, 1000);
+    } catch (err) {
+      console.error('Failed to cancel draft:', err);
+      setDraftActionError(err.message || 'Failed to cancel draft');
+    } finally {
+      setApprovingDraft(false);
+    }
+  };
+
+  const hasReviewAlert = invoices.some(inv => (inv.status || '').toUpperCase() === 'REVIEW') || pendingDrafts.length > 0;
+
   return (
     <div className="inventory">
       <div className="container">
@@ -297,7 +378,7 @@ const Inventory = () => {
             {error && <div className="error-message">{error}</div>}
           </div>
           <div className="header-actions">
-            <button 
+            <button
               className="btn btn-secondary btn-upload"
               onClick={() => setShowUploadModal(true)}
               disabled={loading}
@@ -305,7 +386,7 @@ const Inventory = () => {
               <Upload size={16} />
               Upload Document
             </button>
-            <button 
+            <button
               className="btn btn-primary"
               onClick={() => setShowAddModal(true)}
               disabled={loading}
@@ -340,12 +421,15 @@ const Inventory = () => {
             </select>
           </div>
 
-          <button 
+          <button
             className="view-invoices-btn"
             onClick={handleOpenInvoicesModal}
           >
             <FileText size={18} />
             View Invoices
+            {hasReviewAlert && (
+              <span className="btn-review-badge"></span>
+            )}
           </button>
         </div>
 
@@ -373,14 +457,14 @@ const Inventory = () => {
                 </div>
               </div>
               <div className="card-actions">
-                <button 
+                <button
                   className="action-btn edit"
                   onClick={() => handleEditItem(item)}
                   disabled={loading}
                 >
                   <Edit size={16} />
                 </button>
-                <button 
+                <button
                   className="action-btn delete"
                   onClick={() => handleDeleteItem(item)}
                   disabled={loading}
@@ -397,15 +481,10 @@ const Inventory = () => {
             <Package size={64} />
             <h3>No items found</h3>
             <p>Try adjusting your search or add a new item to get started.</p>
-            <div style={{ marginTop: '20px', fontSize: '12px', color: '#666' }}>
-              <p>Debug info:</p>
-              <p>Items count: {items.length}</p>
-              <p>Filtered items count: {filteredItems.length}</p>
-              <p>Categories: {categories.join(', ') || 'None'}</p>
-            </div>
           </div>
         )}
 
+        {/* Add/Edit Item Modal */}
         {showAddModal && (
           <div className="modal-overlay" onClick={closeModal}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -420,7 +499,7 @@ const Inventory = () => {
                     type="text"
                     className="form-input"
                     value={newItem.name}
-                    onChange={(e) => setNewItem({...newItem, name: e.target.value})}
+                    onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
                     required
                     placeholder="Enter item name"
                   />
@@ -431,7 +510,7 @@ const Inventory = () => {
                     type="text"
                     className="form-input"
                     value={newItem.category}
-                    onChange={(e) => setNewItem({...newItem, category: e.target.value})}
+                    onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
                     required
                     placeholder="Enter category"
                   />
@@ -442,7 +521,7 @@ const Inventory = () => {
                     type="number"
                     className="form-input"
                     value={newItem.quantity}
-                    onChange={(e) => setNewItem({...newItem, quantity: e.target.value})}
+                    onChange={(e) => setNewItem({ ...newItem, quantity: e.target.value })}
                     required
                     min="0"
                     placeholder="Enter quantity"
@@ -453,7 +532,7 @@ const Inventory = () => {
                   <textarea
                     className="form-input"
                     value={newItem.description}
-                    onChange={(e) => setNewItem({...newItem, description: e.target.value})}
+                    onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
                     placeholder="Enter description (optional)"
                     rows="3"
                   />
@@ -471,6 +550,7 @@ const Inventory = () => {
           </div>
         )}
 
+        {/* Upload Modal */}
         {showUploadModal && (
           <div className="modal-overlay" onClick={closeUploadModal}>
             <div className="modal upload-modal" onClick={(e) => e.stopPropagation()}>
@@ -483,7 +563,7 @@ const Inventory = () => {
                   <FileText size={48} className="upload-icon" />
                   <p className="dropzone-text">Select invoice, receipt, or inventory document</p>
                   <p className="dropzone-hint">Supported formats: JPG, PNG, PDF (Max 5MB)</p>
-                  
+
                   <input
                     type="file"
                     id="document-upload"
@@ -519,7 +599,7 @@ const Inventory = () => {
                     <div>
                       <strong>{uploadStatus.message}</strong>
                       <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem' }}>
-                        Status: <code>{uploadStatus.status}</code> (Saved in DB, pending processing)
+                        Status: <code>{uploadStatus.status}</code> (Saved in S3/DB, awaiting worker pickup)
                       </p>
                     </div>
                   </div>
@@ -540,6 +620,7 @@ const Inventory = () => {
           </div>
         )}
 
+        {/* View Invoices Modal */}
         {showInvoicesModal && (
           <div className="modal-overlay" onClick={closeInvoicesModal}>
             <div className="modal invoices-modal" onClick={(e) => e.stopPropagation()}>
@@ -549,6 +630,19 @@ const Inventory = () => {
               </div>
 
               <div className="invoices-modal-content">
+                {/* Alert banner if draft review is pending */}
+                {hasReviewAlert && (
+                  <div className="review-alert-banner">
+                    <div className="review-alert-content">
+                      <AlertTriangle size={24} color="#9333ea" />
+                      <div>
+                        <div className="review-alert-title">Draft Invoice Review Required</div>
+                        <div className="review-alert-sub">Invoice is parsed. Please review the extracted draft before finalizing.</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {invoicesError && <div className="upload-alert error">{invoicesError}</div>}
 
                 {loadingInvoices ? (
@@ -564,30 +658,45 @@ const Inventory = () => {
                   </div>
                 ) : (
                   <div className="invoices-list">
-                    {invoices.map((inv) => (
-                      <div key={inv._id || inv.customId} className="invoice-item-card">
-                        <div className="invoice-item-icon">
-                          <FileText size={24} />
-                        </div>
-                        <div className="invoice-item-details">
-                          <span className="invoice-name">{inv.originalName}</span>
-                          <span className="invoice-meta">
-                            Uploaded: {new Date(inv.createdAt).toLocaleDateString()} • {(inv.size / 1024).toFixed(1)} KB
-                          </span>
-                          <div className="invoice-status-row">
-                            <span className={`status-badge status-${inv.status || 'pending'}`}>
-                              Processing: {inv.status || 'pending'}
+                    {invoices.map((inv) => {
+                      const statusUpper = (inv.status || 'PENDING').toUpperCase();
+                      const isReview = statusUpper === 'REVIEW';
+
+                      return (
+                        <div key={inv._id || inv.customId} className="invoice-item-card">
+                          <div className="invoice-item-icon">
+                            <FileText size={24} />
+                          </div>
+                          <div className="invoice-item-details">
+                            <span className="invoice-name">{inv.originalName}</span>
+                            <span className="invoice-meta">
+                              Uploaded: {new Date(inv.createdAt).toLocaleDateString()} • {(inv.size / 1024).toFixed(1)} KB
                             </span>
+                            <div className="invoice-status-row">
+                              <span className={`status-badge status-${statusUpper}`}>
+                                {statusUpper}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="invoice-actions-cell">
+                            {isReview && (
+                              <button
+                                className="btn-review-draft"
+                                onClick={() => handleOpenDraftModal(inv._id || inv.customId)}
+                              >
+                                Review Draft
+                              </button>
+                            )}
+                            <button
+                              className="btn-view-bill"
+                              onClick={() => handleViewBill(inv._id || inv.customId)}
+                            >
+                              View File
+                            </button>
                           </div>
                         </div>
-                        <button 
-                          className="btn-view-bill"
-                          onClick={() => handleViewBill(inv._id || inv.customId)}
-                        >
-                          View Bill
-                        </button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -595,6 +704,131 @@ const Inventory = () => {
               <div className="modal-actions" style={{ padding: '0 24px 24px' }}>
                 <button className="btn btn-secondary" onClick={closeInvoicesModal}>
                   Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Draft Review & Edit Modal */}
+        {showDraftModal && activeDraft && (
+          <div className="modal-overlay" onClick={() => setShowDraftModal(false)}>
+            <div className="modal draft-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>Review Extracted Draft</h2>
+                <button className="close-btn" onClick={() => setShowDraftModal(false)}>×</button>
+              </div>
+
+              <div className="draft-modal-body">
+                <div className="draft-meta-summary">
+                  <div className="draft-meta-item">
+                    <span className="draft-meta-label">Vendor / Store</span>
+                    <span className="draft-meta-val">{activeDraft.vendor || 'Unknown Vendor'}</span>
+                  </div>
+                  <div className="draft-meta-item">
+                    <span className="draft-meta-label">Invoice Date</span>
+                    <span className="draft-meta-val">{activeDraft.date || 'N/A'}</span>
+                  </div>
+                  <div className="draft-meta-item">
+                    <span className="draft-meta-label">Total Amount</span>
+                    <span className="draft-meta-val">₹{(activeDraft.totalAmount || 0).toFixed(2)}</span>
+                  </div>
+                </div>
+
+                <div className="draft-items-header">
+                  <h4>Extracted Items ({draftItems.length})</h4>
+                  <button className="btn-add-row" onClick={handleAddDraftItemRow}>
+                    + Add Item Row
+                  </button>
+                </div>
+
+                {draftActionError && (
+                  <div className="upload-alert error">
+                    <AlertCircle size={18} />
+                    <span>{draftActionError}</span>
+                  </div>
+                )}
+
+                {draftActionSuccess && (
+                  <div className="upload-alert success">
+                    <CheckCircle2 size={18} />
+                    <span>{draftActionSuccess}</span>
+                  </div>
+                )}
+
+                <table className="draft-editor-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '30%' }}>Item Name</th>
+                      <th style={{ width: '22%' }}>Category</th>
+                      <th style={{ width: '15%' }}>Quantity</th>
+                      <th style={{ width: '25%' }}>Description</th>
+                      <th style={{ width: '8%' }}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {draftItems.map((item, idx) => (
+                      <tr key={idx}>
+                        <td>
+                          <input
+                            type="text"
+                            className="draft-input"
+                            value={item.name}
+                            onChange={(e) => handleDraftItemChange(idx, 'name', e.target.value)}
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="text"
+                            className="draft-input"
+                            value={item.category || item.roomName || ''}
+                            onChange={(e) => handleDraftItemChange(idx, 'category', e.target.value)}
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            className="draft-input"
+                            min="1"
+                            value={item.quantity}
+                            onChange={(e) => handleDraftItemChange(idx, 'quantity', e.target.value)}
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="text"
+                            className="draft-input"
+                            value={item.description || ''}
+                            onChange={(e) => handleDraftItemChange(idx, 'description', e.target.value)}
+                          />
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <button className="btn-remove-row" onClick={() => handleRemoveDraftItemRow(idx)}>
+                            <Trash2 size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="modal-actions" style={{ padding: '0 24px 24px' }}>
+                <button
+                  type="button"
+                  className="btn-cancel-draft"
+                  onClick={handleCancelDraft}
+                  disabled={approvingDraft}
+                >
+                  Cancel / Reject Draft
+                </button>
+                <button
+                  type="button"
+                  className="btn-approve-draft"
+                  onClick={handleApproveDraft}
+                  disabled={approvingDraft}
+                >
+                  {approvingDraft ? 'Processing...' : 'Approve & Add to Inventory'}
                 </button>
               </div>
             </div>

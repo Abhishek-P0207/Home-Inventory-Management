@@ -56,7 +56,7 @@ export default class UserDAO {
     static async getUserById(userId) {
         try {
             const user = await users.findOne({ _id: userId.toString() });
-            console.log("This is user",user);
+            // console.log("This is user",user);
             return user;
         } catch (e) {
             console.error(`Unable to get user by ID: ${e}`);

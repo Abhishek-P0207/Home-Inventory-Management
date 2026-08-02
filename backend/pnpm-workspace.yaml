@@ -1,3 +1,5 @@
 allowBuilds:
+  '@google/genai': true
   aws-sdk: false
   bcrypt: true
+  protobufjs: true

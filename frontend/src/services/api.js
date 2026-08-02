@@ -241,6 +241,31 @@ class ApiService {
       throw error;
     }
   }
+
+  // Get pending drafts awaiting user review
+  async getPendingDrafts() {
+    return this.makeRequest('/drafts/pending');
+  }
+
+  // Get draft for specific invoice ID
+  async getDraftByInvoiceId(invoiceId) {
+    return this.makeRequest(`/drafts/invoice/${encodeURIComponent(invoiceId)}`);
+  }
+
+  // Approve draft and save items to inventory
+  async approveDraft(draftId, draftData) {
+    return this.makeRequest(`/drafts/${encodeURIComponent(draftId)}/approve`, {
+      method: 'POST',
+      body: JSON.stringify(draftData),
+    });
+  }
+
+  // Cancel draft review
+  async cancelDraft(draftId) {
+    return this.makeRequest(`/drafts/${encodeURIComponent(draftId)}/cancel`, {
+      method: 'POST',
+    });
+  }
 }
 
 export default new ApiService();

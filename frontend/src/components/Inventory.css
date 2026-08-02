@@ -486,6 +486,7 @@ textarea.form-input {
   font-weight: 500;
   color: #2c3e50;
   cursor: pointer;
+  position: relative;
   transition: all 0.2s ease;
 }
 
@@ -495,9 +496,21 @@ textarea.form-input {
   color: #1e293b;
 }
 
+.btn-review-badge {
+  position: absolute;
+  top: -1px;
+  right: 0px;
+
+  width: 8px;
+  height: 8px;
+
+  background: #9333ea;
+  border-radius: 50%;
+}
+
 /* Invoices Modal Styles */
 .invoices-modal {
-  max-width: 600px;
+  max-width: 650px;
 }
 
 .invoices-modal-content {
@@ -568,20 +581,47 @@ textarea.form-input {
 .status-badge {
   display: inline-block;
   font-size: 11px;
-  font-weight: 600;
-  padding: 2px 8px;
+  font-weight: 700;
+  padding: 3px 10px;
   border-radius: 12px;
-  text-transform: capitalize;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.status-badge.status-pending {
+.status-badge.status-pending, .status-badge.status-PENDING {
   background-color: #fef3c7;
   color: #92400e;
+  border: 1px solid #fde68a;
 }
 
-.status-badge.status-processed {
+.status-badge.status-processing, .status-badge.status-PROCESSING {
+  background-color: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.status-badge.status-review, .status-badge.status-REVIEW {
+  background-color: #f3e8ff;
+  color: #6b21a8;
+  border: 1px solid #e9d5ff;
+}
+
+.status-badge.status-completed, .status-badge.status-COMPLETED, .status-badge.status-processed {
   background-color: #dcfce7;
   color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.status-badge.status-failed, .status-badge.status-FAILED {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.invoice-actions-cell {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .btn-view-bill {
@@ -599,4 +639,200 @@ textarea.form-input {
 
 .btn-view-bill:hover {
   background-color: #2563eb;
+}
+
+.btn-review-draft {
+  background-color: #9333ea;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-review-draft:hover {
+  background-color: #7e22ce;
+}
+
+/* Alert Banner inside Modal or top of screen */
+.review-alert-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #faf5ff;
+  border: 1px solid #d8b4fe;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  color: #581c87;
+}
+
+.review-alert-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.review-alert-title {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.review-alert-sub {
+  font-size: 12px;
+  color: #7e22ce;
+}
+
+/* Draft Review Modal Styles */
+.draft-modal {
+  max-width: 800px;
+}
+
+.draft-modal-body {
+  padding: 0 24px 24px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.draft-meta-summary {
+  display: flex;
+  gap: 24px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.draft-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.draft-meta-label {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.draft-meta-val {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.draft-items-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.draft-items-header h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.btn-add-row {
+  background-color: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-add-row:hover {
+  background-color: #e2e8f0;
+}
+
+.draft-editor-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.draft-editor-table th {
+  background-color: #f1f5f9;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 10px;
+  text-align: left;
+  border: 1px solid #e2e8f0;
+}
+
+.draft-editor-table td {
+  padding: 8px;
+  border: 1px solid #e2e8f0;
+  vertical-align: middle;
+}
+
+.draft-input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.draft-input:focus {
+  outline: none;
+  border-color: #9333ea;
+  box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.15);
+}
+
+.btn-remove-row {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-remove-row:hover {
+  color: #b91c1c;
+}
+
+.btn-cancel-draft {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-cancel-draft:hover {
+  background-color: #fca5a5;
+}
+
+.btn-approve-draft {
+  background-color: #16a34a;
+  color: #ffffff;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-approve-draft:hover {
+  background-color: #15803d;
 }

@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 import InventoryDAO from "./dao/inventoryDAO.js";
 import UserDAO from "./dao/userDAO.js";
 import InvoiceDAO from "./dao/invoiceDAO.js";
+import DraftDAO from "./dao/draftDAO.js";
+import { startInvoiceWorker } from "./workers/invoiceWorker.js";
 
 dotenv.config();
 
@@ -38,6 +40,10 @@ async function main() {
     await InventoryDAO.injectDB(client);
     await UserDAO.injectDB(client);
     await InvoiceDAO.injectDB(client);
+    await DraftDAO.injectDB(client);
+
+    // Start asynchronous invoice worker (runs every 1 minute)
+    startInvoiceWorker(60000);
 
     app.listen(port, () => {
       console.log(`Server listening on port ${port}`);
@@ -54,5 +60,3 @@ async function main() {
 }
 
 main();
-
-
