@@ -14,7 +14,9 @@ const Navbar = ({ user, onLogout }) => {
       <div className="container">
         <div className="navbar-content">
           <Link to="/dashboard" className="logo">
-            <div className="logo-icon">I</div>
+            <div className="logo-icon">
+              <img src="/box-open-solid-full.svg" alt="Box" width={22} height={22} />
+            </div>
             <span className="logo-text">Easy Inventory</span>
           </Link>
 

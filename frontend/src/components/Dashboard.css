@@ -152,22 +152,24 @@
   align-items: center;
   gap: 16px;
   padding: 20px;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  background: white;
 }
 
 .action-card:hover {
-  border-color: #2c3e50;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-color: #2563eb;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.12);
+  transform: translateY(-2px);
 }
 
 .action-icon {
   width: 40px;
   height: 40px;
-  background-color: #f8f9fa;
-  color: #2c3e50;
+  background-color: #eff6ff;
+  color: #2563eb;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -177,12 +179,12 @@
 .action-content h3 {
   font-size: 16px;
   font-weight: 600;
-  color: #2c3e50;
+  color: #0f172a;
   margin-bottom: 4px;
 }
 
 .action-content p {
-  color: #6c757d;
+  color: #64748b;
   font-size: 14px;
 }
 
