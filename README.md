@@ -21,7 +21,6 @@ A modern, React-based inventory management system with Automatic Items extractio
 - Invoice Storage: Multer & AWS S3 SDK
 - AI Invoice Parsing: Google Gen AI SDK
 
----
 
 ## Installation Guide
 
@@ -32,7 +31,6 @@ A modern, React-based inventory management system with Automatic Items extractio
 - AWS S3 Bucket
 - Google Gemini API Key
 
----
 
 ### Step 1: Clone the Repository
 ```bash
@@ -40,7 +38,6 @@ git clone https://github.com/Abhishek-P0207/Home-Inventory-Management.git
 cd Home-Inventory-Management
 ```
 
----
 
 ### Step 2: Backend Setup
 
@@ -77,7 +74,6 @@ cd Home-Inventory-Management
    ```
    The backend server will run on `http://localhost:3000`.
 
----
 
 ### Step 3: Frontend Setup
 
