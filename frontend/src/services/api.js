@@ -1,5 +1,5 @@
 // API service for backend communication
-const API_URL = import.meta.env.API_URL || 'http://localhost:3000/api';
+const API_URL = import.meta.env.API_URL;
 
 class ApiService {
   // Helper method to handle API responses
