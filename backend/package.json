@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon index.js",
-    "dev": "pnpm run start",
-    "build": "pnpm run build"
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "build": "echo \"No build step required\""
   },
   "keywords": [],
   "author": "",
