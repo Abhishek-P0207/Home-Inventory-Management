@@ -1,5 +1,5 @@
 // Authentication service for backend communication
-const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api') + '/auth';
+const API_URL = (import.meta.env.API_URL || 'http://localhost:3000/api') + '/auth';
 
 class AuthService {
   // Helper method to handle API responses
